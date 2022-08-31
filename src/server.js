@@ -19,14 +19,13 @@ const server = http.createServer(app);
 //ws 서버만 필요하면 ws 서버만 띄워도 됨
 const wss = new WebSocketServer({ server });
 
-/** @function handleConnection
- *
- * @param {*} socket - WebSocket으로 연결된 브라우저
- */
-function handleConnection(socket) {
-  console.log(socket);
-}
-
-wss.on("connection", handleConnection);
+wss.on("connection", (socket) => {
+  console.log("Connected to Browser ✅");
+  socket.on("close", () => console.log("Disconnected to Browser 🛑"));
+  socket.on("message", (message, isBinary) => {
+    isBinary ? console.log(message) : console.log(message.toString());
+  });
+  socket.send("hello!");
+});
 
 server.listen(PORT, handleListen);
