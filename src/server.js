@@ -1,6 +1,6 @@
 import http from "http";
 import express from "express";
-import WebSocket, { WebSocketServer } from "ws";
+import { WebSocketServer } from "ws";
 
 const app = express();
 
@@ -19,13 +19,29 @@ const server = http.createServer(app);
 //ws 서버만 필요하면 ws 서버만 띄워도 됨
 const wss = new WebSocketServer({ server });
 
+const sockets = [];
+
 wss.on("connection", (socket) => {
+  sockets.push(socket);
+  socket["nickname"] = "Anon";
   console.log("Connected to Browser ✅");
   socket.on("close", () => console.log("Disconnected to Browser 🛑"));
   socket.on("message", (message, isBinary) => {
-    isBinary ? console.log(message) : console.log(message.toString());
+    const msg = JSON.parse(message);
+    switch (msg.type) {
+      case "new_message":
+        console.log("new message is", msg.payload);
+        sockets.forEach((aSocket) =>
+          aSocket.send(`${socket["nickname"]}: ${msg.payload}`)
+        );
+        break;
+      case "nickname":
+        socket["nickname"] = msg.payload;
+        break;
+      default:
+        console.log("new message");
+    }
   });
-  socket.send("hello!");
 });
 
 server.listen(PORT, handleListen);
