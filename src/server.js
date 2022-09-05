@@ -28,6 +28,8 @@ wsServer.on("connection", (socket) => {
   socket.on("enter_room", (roomName, cb) => {
     socket.join(roomName);
     cb();
+    //room 내에서 socket 자신을 제외한 다른 모든 socket들에게 해당 이벤트를 emit
+    socket.to(roomName).emit("welcome");
   });
 });
 
