@@ -2,16 +2,25 @@ const socket = io();
 
 const welcome = document.querySelector("#welcome");
 const form = welcome.querySelector("form");
+const room = document.getElementById("room");
+
+room.hidden = true;
+
+let roomName;
+
+function showRoom() {
+  welcome.hidden = true;
+  room.hidden = false;
+  const h3 = room.querySelector("h3");
+  h3.innerText = `Room ${roomName}`;
+}
 
 function handleRoomSubmit(event) {
   event.preventDefault();
   const input = form.querySelector("input");
-  socket.emit("enter_room", { payload: input.value }, () => {
-    //서버에서 실행할 cb으로 보낸 console 함수이지만,
-    //실제로 콘솔이 찍히는 건 브라우저 콘솔..!!!
-    //cb의 호출은 서버에서 하지만 실행은 front에서 일어남
-    console.log("server is done!");
-  });
+  //서버에서 특정 콜백 함수를 호출하도록 하려면, 마지막 argument를 함수로 전달하면 됨
+  socket.emit("enter_room", input.value, showRoom);
+  roomName = input.value;
   input.value = "";
 }
 form.addEventListener("submit", handleRoomSubmit);
