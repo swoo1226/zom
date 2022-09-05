@@ -1,40 +1,17 @@
-const msgList = document.querySelector("ul");
-const msgForm = document.querySelector("#message");
-const nickForm = document.querySelector("#nickname");
+const socket = io();
 
-const socket = new WebSocket(`ws://${window.location.host}`);
+const welcome = document.querySelector("#welcome");
+const form = welcome.querySelector("form");
 
-function makeMsg(type, payload) {
-  const msg = { type, payload };
-  return JSON.stringify(msg);
-}
-
-socket.addEventListener("open", () => {
-  console.log("Connected to Server ✅");
-});
-
-socket.addEventListener("message", (message) => {
-  console.log("New message:", message.data);
-  const li = document.createElement("li");
-  li.innerText = message.data;
-  msgList.appendChild(li);
-});
-
-socket.addEventListener("close", () => {
-  console.log("Disconnected to Server 🛑");
-});
-
-function handleSubmit(event) {
+function handleRoomSubmit(event) {
   event.preventDefault();
-  const input = msgForm.querySelector("input");
-  socket.send(makeMsg("new_message", input.value));
+  const input = form.querySelector("input");
+  socket.emit("enter_room", { payload: input.value }, () => {
+    //서버에서 실행할 cb으로 보낸 console 함수이지만,
+    //실제로 콘솔이 찍히는 건 브라우저 콘솔..!!!
+    //cb의 호출은 서버에서 하지만 실행은 front에서 일어남
+    console.log("server is done!");
+  });
   input.value = "";
 }
-msgForm.addEventListener("submit", handleSubmit);
-
-function handleNickSubmit(event) {
-  event.preventDefault();
-  const input = nickForm.querySelector("input");
-  socket.send(makeMsg("nickname", input.value));
-}
-nickForm.addEventListener("submit", handleNickSubmit);
+form.addEventListener("submit", handleRoomSubmit);

@@ -1,6 +1,6 @@
 import http from "http";
+import SocketIo from "socket.io";
 import express from "express";
-import { WebSocketServer } from "ws";
 
 const app = express();
 
@@ -13,35 +13,46 @@ const PORT = 3000;
 
 const handleListen = () => console.log(`Listening on http://localhost:${PORT}`);
 
-const server = http.createServer(app);
+const httpServer = http.createServer(app);
 //동일한 port에 Httpt서버와 websocket 서버를 같이 띄우기 위함
 //2개의 프로토콜이 port를 공유함
 //ws 서버만 필요하면 ws 서버만 띄워도 됨
-const wss = new WebSocketServer({ server });
+// const wss = new WebSocketServer({ server });
 
-const sockets = [];
+const wsServer = SocketIo(httpServer);
 
-wss.on("connection", (socket) => {
-  sockets.push(socket);
-  socket["nickname"] = "Anon";
-  console.log("Connected to Browser ✅");
-  socket.on("close", () => console.log("Disconnected to Browser 🛑"));
-  socket.on("message", (message, isBinary) => {
-    const msg = JSON.parse(message);
-    switch (msg.type) {
-      case "new_message":
-        console.log("new message is", msg.payload);
-        sockets.forEach((aSocket) =>
-          aSocket.send(`${socket["nickname"]}: ${msg.payload}`)
-        );
-        break;
-      case "nickname":
-        socket["nickname"] = msg.payload;
-        break;
-      default:
-        console.log("new message");
-    }
+wsServer.on("connection", (socket) => {
+  socket.on("enter_room", (msg, done) => {
+    console.log(msg);
+    setTimeout(() => {
+      done();
+    }, 10000);
   });
 });
 
-server.listen(PORT, handleListen);
+// const sockets = [];
+
+// wss.on("connection", (socket) => {
+//   sockets.push(socket);
+//   socket["nickname"] = "Anon";
+//   console.log("Connected to Browser ✅");
+//   socket.on("close", () => console.log("Disconnected to Browser 🛑"));
+//   socket.on("message", (message, isBinary) => {
+//     const msg = JSON.parse(message);
+//     switch (msg.type) {
+//       case "new_message":
+//         console.log("new message is", msg.payload);
+//         sockets.forEach((aSocket) =>
+//           aSocket.send(`${socket["nickname"]}: ${msg.payload}`)
+//         );
+//         break;
+//       case "nickname":
+//         socket["nickname"] = msg.payload;
+//         break;
+//       default:
+//         console.log("new message");
+//     }
+//   });
+// });
+
+httpServer.listen(PORT, handleListen);
