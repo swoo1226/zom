@@ -31,6 +31,13 @@ wsServer.on("connection", (socket) => {
     //room 내에서 socket 자신을 제외한 다른 모든 socket들에게 해당 이벤트를 emit
     socket.to(roomName).emit("welcome");
   });
+  socket.on("disconnecting", () => {
+    socket.rooms.forEach((room) => socket.to(room).emit("bye"));
+  });
+  socket.on("new_message", (msg, room, done) => {
+    socket.to(room).emit("new_message", msg);
+    done();
+  });
 });
 
 // const sockets = [];
