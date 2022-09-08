@@ -39,7 +39,6 @@ function publicRooms() {
 wsServer.on("connection", (socket) => {
   socket["nickname"] = "Anon";
   socket.onAny((event) => {
-    console.log(wsServer.sockets.adapter);
     console.log(`Socket Event: ${event}`);
   });
   socket.on("enter_room", (roomName, cb) => {
@@ -47,11 +46,15 @@ wsServer.on("connection", (socket) => {
     cb();
     //room 내에서 socket 자신을 제외한 다른 모든 socket들에게 해당 이벤트를 emit
     socket.to(roomName).emit("welcome", socket.nickname);
+    wsServer.sockets.emit("room_change", publicRooms());
   });
   socket.on("disconnecting", () => {
     socket.rooms.forEach((room) =>
       socket.to(room).emit("bye", socket.nickname)
     );
+  });
+  socket.on("disconnect", () => {
+    wsServer.sockets.emit("room_change", publicRooms());
   });
   socket.on("new_message", (msg, room, done) => {
     socket.to(room).emit("new_message", `${socket.nickname}: ${msg}`);
