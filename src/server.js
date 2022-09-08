@@ -1,6 +1,7 @@
 import http from "http";
-import SocketIo from "socket.io";
+import { Server } from "socket.io";
 import express from "express";
+const { instrument } = require("@socket.io/admin-ui");
 
 const app = express();
 
@@ -19,7 +20,16 @@ const httpServer = http.createServer(app);
 //ws 서버만 필요하면 ws 서버만 띄워도 됨
 // const wss = new WebSocketServer({ server });
 
-const wsServer = SocketIo(httpServer);
+const wsServer = new Server(httpServer, {
+  cors: {
+    origin: ["https://admin.socket.io"],
+    credentials: true,
+  },
+});
+
+instrument(wsServer, {
+  auth: false,
+});
 
 function publicRooms() {
   const {
