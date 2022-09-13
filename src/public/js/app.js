@@ -1,63 +1,45 @@
 const socket = io();
 
-const welcome = document.querySelector("#welcome");
-const form = welcome.querySelector("form");
-const room = document.getElementById("room");
+const myFace = document.getElementById("myFace");
+const muteBtn = document.getElementById("mute");
+const cameraBtn = document.getElementById("camera");
 
-room.hidden = true;
+let myStream;
+let muted = false;
+let cameraOff = false;
 
-let roomName;
-
-function addMessage(msg) {
-  const ul = room.querySelector("ul");
-  const li = document.createElement("li");
-  li.innerText = msg;
-  ul.appendChild(li);
+async function getMedia() {
+  try {
+    myStream = await navigator.mediaDevices.getUserMedia({
+      audio: true,
+      video: true,
+    });
+    // myFace.srcObject = myStream;
+  } catch (e) {
+    console.log(e);
+  }
 }
 
-function handleMessageSubmit(event) {
-  event.preventDefault();
-  const input = room.querySelector("#msg input");
-  const value = input.value;
-  socket.emit("new_message", input.value, roomName, () => {
-    addMessage(`You: ${value}`);
-  });
-  input.value;
+getMedia();
+
+function handleMuteClick() {
+  if (!muted) {
+    muteBtn.innerText = "Unmute";
+    muted = true;
+  } else {
+    muteBtn.innerText = "Mute";
+    muted = false;
+  }
+}
+function handleCameraClick() {
+  if (!cameraOff) {
+    cameraBtn.innerText = "Turn Camera Off";
+    cameraOff = true;
+  } else {
+    cameraBtn.innerText = "Turn Camera On";
+    cameraOff = false;
+  }
 }
 
-function handleNicknameSubmit(event) {
-  event.preventDefault();
-  const input = room.querySelector("#name input");
-  socket.emit("nickname", input.value);
-}
-
-function showRoom() {
-  welcome.hidden = true;
-  room.hidden = false;
-  const h3 = room.querySelector("h3");
-  h3.innerText = `Room ${roomName}`;
-  const msgForm = room.querySelector("#msg");
-  const nameForm = room.querySelector("#name");
-  msgForm.addEventListener("submit", handleMessageSubmit);
-  nameForm.addEventListener("submit", handleNicknameSubmit);
-}
-
-function handleRoomSubmit(event) {
-  event.preventDefault();
-  const input = form.querySelector("input");
-  //서버에서 특정 콜백 함수를 호출하도록 하려면, 마지막 argument를 함수로 전달하면 됨
-  socket.emit("enter_room", input.value, showRoom);
-  roomName = input.value;
-  input.value = "";
-}
-form.addEventListener("submit", handleRoomSubmit);
-
-socket.on("welcome", (user) => {
-  addMessage(`${user} arrived!`);
-});
-
-socket.on("bye", (left) => {
-  addMessage(`${left} left...`);
-});
-
-socket.on("new_message", addMessage);
+muteBtn.addEventListener("click", handleMuteClick);
+cameraBtn.addEventListener("click", handleCameraClick);
