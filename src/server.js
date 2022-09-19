@@ -22,51 +22,19 @@ const httpServer = http.createServer(app);
 const wsServer = SocketIo(httpServer);
 
 wsServer.on("connection", (socket) => {
-  socket["nickname"] = "Anon";
-  socket.onAny((event) => {
-    console.log(`Socket Event: ${event}`);
-  });
-  socket.on("enter_room", (roomName, cb) => {
+  socket.on("join_room", (roomName) => {
     socket.join(roomName);
-    cb();
-    //room 내에서 socket 자신을 제외한 다른 모든 socket들에게 해당 이벤트를 emit
-    socket.to(roomName).emit("welcome", socket.nickname);
+    socket.to(roomName).emit("welcome");
   });
-  socket.on("disconnecting", () => {
-    socket.rooms.forEach((room) =>
-      socket.to(room).emit("bye", socket.nickname)
-    );
+  socket.on("offer", (offer, roomName) => {
+    socket.to(roomName).emit("offer", offer);
   });
-  socket.on("new_message", (msg, room, done) => {
-    socket.to(room).emit("new_message", `${socket.nickname}: ${msg}`);
-    done();
+  socket.on("answer", (answer, roomName) => {
+    socket.to(roomName).emit("answer", answer);
   });
-  socket.on("nickname", (nickname) => (socket["nickname"] = nickname));
+  socket.on("ice", (ice, roomName) => {
+    socket.to(roomName).emit("ice", ice);
+  });
 });
-
-// const sockets = [];
-
-// wss.on("connection", (socket) => {
-//   sockets.push(socket);
-//   socket["nickname"] = "Anon";
-//   console.log("Connected to Browser ✅");
-//   socket.on("close", () => console.log("Disconnected to Browser 🛑"));
-//   socket.on("message", (message, isBinary) => {
-//     const msg = JSON.parse(message);
-//     switch (msg.type) {
-//       case "new_message":
-//         console.log("new message is", msg.payload);
-//         sockets.forEach((aSocket) =>
-//           aSocket.send(`${socket["nickname"]}: ${msg.payload}`)
-//         );
-//         break;
-//       case "nickname":
-//         socket["nickname"] = msg.payload;
-//         break;
-//       default:
-//         console.log("new message");
-//     }
-//   });
-// });
 
 httpServer.listen(PORT, handleListen);
